@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quranic Cross-Lingual Translation Auditor</title>
+  <!-- Arabic fonts — Amiri for body Arabic, Scheherazade New for display -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+
+    <!-- Top row: logo left | salawat right -->
+    <div class="header-top-row">
+
+      <!-- Logo -->
+      <div class="header-logo">
+        <img src="{{ url_for('static', filename='LQ_logo.png') }}"
+             alt="LearnQuran Academy Logo"
+             class="logo-img">
+        <div class="logo-text-block">
+          <span class="logo-name">LearnQuran</span>
+          <span class="logo-tagline">A LearnQuran Academy Project</span>
+        </div>
+      </div>
+
+      <!-- Salawat / opening praise — right side -->
+      <div class="header-salawat">
+        ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَالَمِينَ وَٱلصَّلَاةُ وَٱلسَّلَامُ عَلَىٰ سَيِّدِ ٱلْأَنْبِيَاءِ وَٱلْمُرْسَلِينَ وَعَلَىٰ آلِهِ وَصَحْبِهِ أَجْمَعِينَ
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="header-divider"></div>
+
+    <!-- Main title block -->
+    <div class="header-title-block">
+
+      <!-- Line 1: English title · Arabic title inline -->
+      <div class="header-line-one">
+        <h1>Qur&#x101;n Cross-Lingual <span>Translation Auditor</span></h1>
+        <span class="header-sep">·</span>
+        <p class="header-title-ar">مُدَقِّق تَرجَمَات <span>القُرآن الكَريم</span> عَبرَ اللُّغَات</p>
+      </div>
+
+      <!-- Line 2: English subtitle · Arabic subtitle inline -->
+      <div class="header-line-two">
+        <p class="header-subtitle">For each Ayah, how closely does each translation stay to the Quranic Lexical &amp; Semantics?</p>
+        <span class="header-sep">·</span>
+        <p class="header-subtitle-ar">لكلِّ آية — إلى أيِّ مدىً تلتزم كلُّ ترجمةٍ بالمعجم القرآني ودلالاته؟</p>
+      </div>
+
+    </div>
+
+    <div class="scope-bar">
+      <span class="scope-tag has-tooltip">Sahih International &nbsp;|&nbsp; صحيح انترناشيونال
+        <span class="tooltip-box">Published by Saheeh International (1997). Known for its precise, formal-equivalence English rendering. Widely used in academic and Islamic studies contexts. Tends toward literal accuracy over literary flow.</span>
+      </span>
+      <span class="scope-tag has-tooltip">Abdel Haleem &nbsp;|&nbsp; عبد الحليم
+        <span class="tooltip-box">By Muhammad Abdel Haleem (Oxford University Press, 2004). Prioritises natural, readable English. A literary translation that sometimes paraphrases for clarity, occasionally at the cost of root-level precision.</span>
+      </span>
+      <span class="scope-tag has-tooltip">Mustafa Khattab &nbsp;|&nbsp; مصطفى الخطاب
+        <span class="tooltip-box">The Clear Quran by Dr. Mustafa Khattab (2015). Balances literal accuracy with accessible modern English. Uses "Allah" throughout. Widely praised for clarity and fidelity to the Arabic.</span>
+      </span>
+      <span class="scope-tag has-tooltip">Fadel Soliman / Bridges &nbsp;|&nbsp; فاضل سليمان
+        <span class="tooltip-box">Bridges translation by Fadel Soliman. A precise, root-faithful rendering that stays very close to the Arabic grammatical structure. Uses bracketed additions to distinguish added English words from the Arabic source.</span>
+      </span>
+      <span class="scope-tag has-tooltip">Ala Hazrat / A.F. Qadri &nbsp;|&nbsp; كنز الإيمان
+        <span class="tooltip-box">Kanzul Iman — translated by Imam Ahmad Raza Khan (Ala Hazrat, 1910), rendered into English by Prof. A.F. Qadri. A classical tradition translation engrossed in love with rich honorific language for prophetic references.</span>
+      </span>
+    </div>
+
+  </div>
+</header>
+
+<main class="main-content">
+
+  <p class="section-title">
+    {% if surah_filter %}
+      {{ surah_filter }}{% if surah_filter_ar %} — {{ surah_filter_ar }}{% endif %}
+    {% else %}
+      All Surahs
+    {% endif %}
+    &mdash; Showing {{ (page - 1) * page_size + 1 }}&ndash;{{ [(page * page_size), total_filtered] | min }}
+    of {{ total_filtered }} Ayat
+  </p>
+
+  <div class="filter-pagination-bar">
+    <form method="get" action="/" class="filter-form">
+      <label for="surah-select">Filter by Surah:</label>
+      <select id="surah-select" name="surah" onchange="this.form.submit()">
+        <option value="">All Surahs — جميع السور ({{ total_ayat }} Ayat)</option>
+        {% for s in surahs %}
+        <option value="{{ s.en }}" {% if s.en == surah_filter %}selected{% endif %}>
+          {{ s.en }}{% if s.ar %} — {{ s.ar }}{% endif %}
+        </option>
+        {% endfor %}
+      </select>
+      {% if surah_filter %}<a href="/" class="clear-filter-btn">✕ Clear</a>{% endif %}
+    </form>
+    <div class="pagination-info">Page {{ page }} of {{ total_pages }}</div>
+  </div>
+
+  <!-- ── Ayah cards ──────────────────────────────────────────────────────── -->
+  {% for ayah in ayat %}
+
+  {% if ayah.surah_intro and surah_filter %}
+  <div class="surah-intro-panel">
+    <div class="surah-intro-header" onclick="toggleIntro(this)" role="button" aria-expanded="false">
+      <span class="surah-intro-label">About this Surah</span>
+      <span class="surah-intro-icon">+</span>
+    </div>
+    <div class="surah-intro-body" hidden>
+      <p class="surah-panel-text">{{ ayah.surah_intro }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="ayah-card">
+
+    <div class="ayah-card-head">
+      <div class="ayah-meta">
+        <span class="ayah-key">Ayah {{ ayah.ayah_key }}</span>
+        <span class="ayah-surah">
+          {{ ayah.surah_name }}{% if ayah.surah_arabic %} &mdash; <span class="surah-arabic-inline">{{ ayah.surah_arabic }}</span>{% endif %}
+        </span>
+      </div>
+      <div class="ayah-arabic">{{ ayah.arabic }}</div>
+    </div>
+
+    {% for t in ayah.translators %}
+    <div class="trans-row">
+      <div class="trans-content">
+        <div class="trans-tag">{{ t.label }}</div>
+        {% if t.text %}
+        <div class="trans-text">{{ t.text }}</div>
+        {% else %}
+        <div class="trans-text trans-empty">Not yet translated</div>
+        {% endif %}
+      </div>
+      <div class="trans-scores">
+
+        {% if t.gloss_score is not none %}
+          {% if t.gloss_score >= 0.6 %}
+            <span class="score-pill score-literal-high">
+          {% elif t.gloss_score >= 0.3 %}
+            <span class="score-pill score-literal-mid">
+          {% else %}
+            <span class="score-pill score-literal-low">
+          {% endif %}
+            <span class="score-label">{{ score_labels.gloss }}</span>
+            <span class="score-val">{{ "%.2f"|format(t.gloss_score) }}</span>
+          </span>
+        {% else %}
+          <span class="score-pill score-literal-na">
+            <span class="score-label">{{ score_labels.gloss }}</span>
+            <span class="score-val">&mdash;</span>
+          </span>
+        {% endif %}
+
+        {% if t.root_score is not none %}
+          {% if t.root_score >= 0.6 %}
+            <span class="score-pill score-sem-high">
+          {% elif t.root_score >= 0.3 %}
+            <span class="score-pill score-sem-mid">
+          {% else %}
+            <span class="score-pill score-sem-low">
+          {% endif %}
+            <span class="score-label">{{ score_labels.root }}</span>
+            <span class="score-val">{{ "%.2f"|format(t.root_score) }}</span>
+          </span>
+        {% else %}
+          <span class="score-pill score-sem-na">
+            <span class="score-label">{{ score_labels.root }}</span>
+            <span class="score-val">&mdash;</span>
+          </span>
+        {% endif %}
+
+      </div>
+    </div>
+    {% endfor %}
+
+    <div class="card-expand-bar" onclick="toggleDetail(this)" role="button" aria-expanded="false">
+      <span class="expand-label">Root Breakdown &middot; Linguistic Reasoning &middot; Semantic Depth Analysis</span>
+      <span class="expand-icon">+</span>
+    </div>
+
+    <div class="card-detail" hidden>
+
+      {% if ayah.root_breakdown %}
+      <div class="root-panel">
+        <div class="root-panel-title">Root Breakdown</div>
+        <div class="root-grid">
+          {% for r in ayah.root_breakdown %}
+          {% if r.core or r.extended %}
+          <div class="root-item">
+            <span class="root-arabic">{{ r.arabic_word }}</span>
+            <span class="root-latin">{{ r.latin }}</span>
+            <span class="root-field">{{ (r.core + r.extended) | join(', ') }}</span>
+          </div>
+          {% else %}
+          <div class="root-item root-item-uncovered">
+            <span class="root-arabic">{{ r.arabic_word }}</span>
+            <span class="root-latin">{{ r.latin }}</span>
+            <span class="root-field root-field-uncovered">Lexicon entry pending</span>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if ayah.reasoning %}
+      <div class="reasoning-panel">
+        <div class="reasoning-title">Linguistic Reasoning</div>
+        <p class="reasoning-text">{{ ayah.reasoning }}</p>
+      </div>
+      {% endif %}
+
+      {% if ayah.depth_commentary %}
+      <div class="depth-prose-panel">
+        <div class="depth-prose-title">Translation Analysis</div>
+        <p class="depth-prose-text">{{ ayah.depth_commentary }}</p>
+      </div>
+      {% endif %}
+
+      <div class="text-section legend-section">
+        {% if ayah.has_roots %}
+        <div class="legend">
+          <span><strong>{{ score_labels.gloss }}</strong> &mdash; overlap with the official Arabic Corpus word-by-word gloss for this ayah</span>
+          <span><strong>{{ score_labels.root }}</strong> &mdash; overlap with the Hans Wehr-style semantic field of each root above</span>
+        </div>
+        {% else %}
+        <div class="legend">
+          <span class="root-pending">Root Breakdown &middot; Linguistic Reasoning &middot; Semantic Depth Analysis for this Surah is planned for a future version.</span>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+  
+
+
+  {% endfor %}
+
+  <div class="pagination-controls">
+    {% if page > 1 %}
+      <a href="?page=1{% if surah_filter %}&surah={{ surah_filter }}{% endif %}" class="page-btn">&#171; First</a>
+      <a href="?page={{ page - 1 }}{% if surah_filter %}&surah={{ surah_filter }}{% endif %}" class="page-btn">&#8249; Prev</a>
+    {% endif %}
+    {% for p in range([1, page - 2] | max, [total_pages + 1, page + 3] | min) %}
+      <a href="?page={{ p }}{% if surah_filter %}&surah={{ surah_filter }}{% endif %}"
+         class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+    {% endfor %}
+    {% if page < total_pages %}
+      <a href="?page={{ page + 1 }}{% if surah_filter %}&surah={{ surah_filter }}{% endif %}" class="page-btn">Next &#8250;</a>
+      <a href="?page={{ total_pages }}{% if surah_filter %}&surah={{ surah_filter }}{% endif %}" class="page-btn">Last &#187;</a>
+    {% endif %}
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+
+    <div class="footer-brand">
+      <span class="footer-logo-name">LearnQuran</span>
+      <span class="footer-tagline">A LearnQuran Academy Project</span>
+      <p class="footer-arabic">مدقق ترجمات القرآن الكريم عبر اللغات</p>
+    </div>
+
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Project</h4>
+        <ul>
+          <li><a href="/">Ayah View</a></li>
+          <li><a href="/surahs">Surah Summary</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Translations Audited</h4>
+        <ul>
+          <li>Sahih International</li>
+          <li>Abdel Haleem (Oxford)</li>
+          <li>Mustafa Khattab</li>
+          <li>Fadel Soliman / Bridges</li>
+          <li>Ala Hazrat / Kanzul Iman</li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <ul>
+          <li><a href="mailto:learnquran.iqra@gmail.com">Email</a></li>
+          <li><a href="https://github.com/kayShahbaaz/Quran-translation-auditor" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://www.youtube.com/@LearnQuran_iqra" target="_blank" rel="noopener">YouTube &rarr;</a></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <p>
+      &copy; {{ 2021 }} LearnQuran Academy. All rights reserved. &nbsp;|&nbsp;
+      Quranic Cross-Lingual Translation Auditor is an educational research tool. &nbsp;|&nbsp;
+      Translation texts remain the copyright of their respective publishers. &nbsp;|&nbsp;
+      Root lexicon data derived from the Quranic Arabic Corpus (corpus.quran.com).
+    </p>
+  </div>
+</footer>
+
+<script>
+function toggleDetail(bar) {
+  const detail = bar.nextElementSibling;
+  const icon   = bar.querySelector('.expand-icon');
+  const isOpen = !detail.hidden;
+  detail.hidden = isOpen;
+  icon.textContent = isOpen ? '+' : '−';
+  bar.setAttribute('aria-expanded', String(!isOpen));
+}
+
+function toggleIntro(header) {
+  const body   = header.nextElementSibling;
+  const icon   = header.querySelector('.surah-intro-icon');
+  const isOpen = !body.hidden;
+  body.hidden  = isOpen;
+  icon.textContent = isOpen ? '+' : '−';
+  header.setAttribute('aria-expanded', String(!isOpen));
+}
+</script>
+</body>
+</html>
