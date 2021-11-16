@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Surah Summary — Quranic Translation Auditor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/surahs.css') }}" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-top-row">
+      <div class="header-logo">
+        <img src="{{ url_for('static', filename='LQ_logo.png') }}" alt="LearnQuran Academy Logo" class="logo-img">
+        <div class="logo-text-block">
+          <span class="logo-name">LearnQuran</span>
+          <span class="logo-tagline">A LearnQuran Academy Project</span>
+        </div>
+      </div>
+      <div class="header-salawat">
+        ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَالَمِينَ وَٱلصَّلَاةُ وَٱلسَّلَامُ عَلَىٰ سَيِّدِ ٱلْأَنْبِيَاءِ وَٱلْمُرْسَلِينَ وَعَلَىٰ آلِهِ وَصَحْبِهِ أَجْمَعِينَ
+      </div>
+    </div>
+    <div class="header-divider"></div>
+    <div class="header-title-block">
+      <div class="header-titles-left">
+        <h1>Qur&#x101;n Cross-Lingual <span>Translation Auditor</span></h1>
+        <p class="header-title-ar">مُدَقِّق تَرجَمَات <span>القُرآن الكَريم</span> عَبرَ اللُّغَات</p>
+      </div>
+      <div class="header-subtitles-right">
+        <p class="header-subtitle">Surah-level Literal Accuracy summary across all 114 Surahs</p>
+        <p class="header-subtitle-ar">ملخص دقة الترجمة الحرفية لجميع السور</p>
+      </div>
+    </div>
+    <div class="scope-bar">
+      <span class="scope-tag">Sahih International &nbsp;|&nbsp; صحيح انترناشيونال</span>
+      <span class="scope-tag">Abdel Haleem &nbsp;|&nbsp; عبد الحليم</span>
+      <span class="scope-tag">Mustafa Khattab &nbsp;|&nbsp; مصطفى الخطاب</span>
+      <span class="scope-tag">Fadel Soliman / Bridges &nbsp;|&nbsp; فاضل سليمان</span>
+      <span class="scope-tag">Ala Hazrat / A.F. Qadri &nbsp;|&nbsp; كنز الإيمان</span>
+    </div>
+  </div>
+</header>
+
+<main class="main-content">
+
+  <div class="summary-nav">
+    <a href="/" class="nav-btn">&#8592; Back to Ayah View</a>
+    <p class="summary-note">
+      Literal Accuracy = Jaccard overlap between each translation's content words and the official
+      Arabic Corpus word-by-word gloss. Averaged across all Ayat in each Surah.
+      <span class="score-legend">
+        <span class="leg-dot leg-high"></span> ≥ 0.60 &nbsp;
+        <span class="leg-dot leg-mid"></span> 0.30–0.59 &nbsp;
+        <span class="leg-dot leg-low"></span> &lt; 0.30
+      </span>
+    </p>
+  </div>
+
+  <div class="summary-table-wrap">
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th class="col-num">#</th>
+          <th class="col-surah">Surah</th>
+          <th class="col-ayat">Ayat</th>
+          <th class="col-score">Sahih</th>
+          <th class="col-score">Haleem</th>
+          <th class="col-score">Khattab</th>
+          <th class="col-score">Soliman</th>
+          <th class="col-score">Ala Hazrat</th>
+          <th class="col-score col-overall">Overall</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in surahs %}
+        <tr class="surah-row" onclick="window.location='/?surah={{ s.en }}'">
+          <td class="col-num">{{ s.num }}</td>
+          <td class="col-surah">
+            <span class="surah-en">{{ s.en }}</span>
+            {% if s.ar %}<span class="surah-ar">{{ s.ar }}</span>{% endif %}
+          </td>
+          <td class="col-ayat">{{ s.count }}</td>
+          {% for tkey in ['sahih','haleem','khattab','soliman','kanzuliman'] %}
+          {% set sc = s.avgs.get(tkey) %}
+          <td class="col-score">
+            {% if sc is not none %}
+            <span class="score-chip {% if sc >= 0.6 %}chip-high{% elif sc >= 0.3 %}chip-mid{% else %}chip-low{% endif %}">
+              {{ "%.2f"|format(sc) }}
+            </span>
+            {% else %}
+            <span class="score-chip chip-na">—</span>
+            {% endif %}
+          </td>
+          {% endfor %}
+          <td class="col-score col-overall">
+            {% if s.overall is not none %}
+            <span class="score-chip overall-chip {% if s.overall >= 0.6 %}chip-high{% elif s.overall >= 0.3 %}chip-mid{% else %}chip-low{% endif %}">
+              {{ "%.2f"|format(s.overall) }}
+            </span>
+            {% else %}
+            <span class="score-chip chip-na">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  مدقق ترجمات القرآن الكريم &mdash; Quranic Cross-Lingual Translation Auditor &mdash; Python 3 / Flask / SQLite
+</footer>
+
+</body>
+</html>
