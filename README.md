@@ -19,7 +19,8 @@ A research and educational tool that algorithmically scores how faithfully five 
 
 ## Live Demo
 
-Comming soon..
+🔗 [Quran Translation Auditor](https://web-production-46991.up.railway.app)
+
 
 ---
 
